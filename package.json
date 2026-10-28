@@ -1,0 +1,12 @@
+{
+  "name": "workout-log",
+  "version": "1.0.2",
+  "private": true,
+  "scripts": {
+    "test": "node tests/check.cjs",
+    "start": "python3 -m http.server 8080 --bind 127.0.0.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
