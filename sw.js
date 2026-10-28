@@ -1,6 +1,6 @@
-const CACHE = 'arise-app-v4';
+const CACHE = 'arise-app-v5';
 const ROOT = new URL('./', self.location.href).href;
-const ASSETS = ['./','./index.html','./upgrade.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const ASSETS = ['./','./index.html','./upgrade.js','./image-import.js','./assistant.js','./assistant-worker.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
 });

@@ -6,6 +6,8 @@ const context=vm.createContext({console,Intl,Date,Math,Number,String,Object,Arra
 vm.runInContext("globalThis.window=globalThis;globalThis.scrollTo=()=>{};globalThis.addEventListener=()=>{}",context);
 vm.runInContext(code,context);
 vm.runInContext(fs.readFileSync(__dirname+'/../upgrade.js','utf8'),context);
+vm.runInContext(fs.readFileSync(__dirname+'/../image-import.js','utf8'),context);
+vm.runInContext(fs.readFileSync(__dirname+'/../assistant.js','utf8'),context);
 const run=s=>vm.runInContext(s,context), set=(id,v)=>node(id).value=String(v);
 assert.match(node('app').innerHTML,/Your next level, Sultan/);
 for(const tab of ['home','train','log','progress']){run(`go('${tab}')`);assert(node('app').innerHTML.length>100)}
@@ -58,3 +60,39 @@ const before=run('S.logs.length');run('saveTextWorkout()');assert.equal(run('S.l
 run("tab='log';logTab='text';dialogKey='';globalThis.field={id:'workout-text',type:'textarea',value:'Draft workout',readOnly:false};document.querySelectorAll=()=>[field];captureDraft();field.value='';restoreDraft()");
 assert.equal(run('field.value'),'Draft workout');assert.equal(run("JSON.parse(localStorage.getItem('arise-v1')).drafts['log:text']['workout-text']"),'Draft workout');
 console.log('PASS: reviewed text import saves completed sets; input drafts persist and restore. Built-in exercises:',run("Object.keys(E).filter(x=>!x.startsWith('user_')).length"));
+
+// Synthetic OCR geometry: wrapped names, separate numeric columns and unknown loads.
+context.ocrWords=[
+{text:'Incline',confidence:95,bbox:{x0:180,x1:260,y0:170,y1:190}},
+{text:'Dumbbell',confidence:95,bbox:{x0:270,x1:390,y0:170,y1:190}},
+{text:'Bench Press',confidence:95,bbox:{x0:180,x1:400,y0:200,y1:220}},
+{text:'0:30',confidence:95,bbox:{x0:550,x1:610,y0:190,y1:210}},
+{text:'Band-assisted Pull-up',confidence:95,bbox:{x0:180,x1:500,y0:290,y1:310}},
+{text:'0:40',confidence:95,bbox:{x0:550,x1:610,y0:290,y1:310}},
+{text:'5:26',confidence:95,bbox:{x0:100,x1:160,y0:20,y1:40}}
+];
+context.ocrReps=[{text:'8',confidence:90,bbox:{x0:680,x1:710,y0:190,y1:210}},{text:'6',confidence:90,bbox:{x0:680,x1:710,y0:290,y1:310}}];
+context.ocrLoads=[{text:'25.0',confidence:90,bbox:{x0:820,x1:880,y0:190,y1:210}}];
+run("globalThis.ocrRows=tableRows(ocrWords,ocrReps,ocrLoads,1000,400)");
+assert.equal(run('ocrRows.length'),2);
+assert.equal(run('ocrRows[0].id'),'dbincline');
+assert.equal(run('ocrRows[1].id'),'bandpullup');
+assert.equal(run('ocrRows[1].weight'),null);
+assert.equal(run('ocrRows[0].seconds'),30);
+run("globalThis.ocrDraft={rows:ocrRows,unit:'lb',convention:'unknown'}");
+assert.equal(run('screenshotSets(ocrDraft)[0].weight'),11.34);
+assert.equal(run('screenshotSets(ocrDraft)[1].weight'),null);
+assert.equal(run('screenshotSets(ocrDraft)[0].rir'),null);
+assert.throws(()=>run("screenshotSets({...ocrDraft,unit:''})"));
+run("ocrRows[0].reps=null");assert.throws(()=>run('screenshotSets(ocrDraft)'));
+run("ocrRows[0].reps=8;S.screenshotDraft={...ocrDraft,date:day(),minutes:'',title:'Synthetic import'}");
+node('ocr-confirm').checked=true;
+const beforeImage=run('S.logs.length');run('saveScreenshotWorkout()');
+assert.equal(run('S.logs.length'),beforeImage+1);
+assert.equal(run('S.logs.at(-1).durationUnknown'),true);
+assert.equal(run('S.logs.at(-1).sets[1].weight'),null);
+assert(run('validateBackup(S)'));
+assert(run("assistantContext('screenshot garmin').includes('OCR does not infer')"));
+run("screenshotBusy=true");assert.equal(run('updateSafe()'),false);run("screenshotBusy=false;assistantBusy=true");assert.equal(run('updateSafe()'),false);run('assistantBusy=false');
+for(const pane of ['image','assistant'])run(`logTab='${pane}';go('log')`);
+console.log('PASS: OCR grouping, wrapped names, nullable loads, unit/repetition validation, reviewed save, backup and assistant/update guards.');

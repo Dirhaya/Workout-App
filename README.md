@@ -1,13 +1,13 @@
 # Workout Log — workout tracker
 
-Functional, dependency-free app project for Sultan. Assessment is optional. Includes home-equipment workout suggestions, custom routines, per-set logs, rest timer, running logs, goals, consistency levels, screenshot attachments, Live Text parsing, and JSON backup/restore.
+Functional static app project for Sultan. Assessment is optional. Includes home-equipment workout suggestions, custom routines, per-set logs, rest timer, running logs, goals, consistency levels, screenshot attachments, Live Text parsing, and JSON backup/restore.
 
 ## Get it onto your iPhone
 
 A GitHub repository holds source code; an iPhone does not execute a repository by itself. This project includes everything needed for GitHub Pages hosting and Home Screen installation, without an App Store build or signing account.
 
-1. Create a GitHub repository named `workout-log`. Upload the **contents** of this folder to the repository root. `index.html` must be at the root, not inside another folder. Do not upload only the ZIP.
-2. In repository **Settings → Pages**, choose **Deploy from a branch**, select your main branch and **/(root)**, then Save. Repository visibility/plan must support Pages. Use the exact published URL GitHub shows when deployment finishes.
+1. Open https://dirhaya.github.io/Workout-App/ in Safari. The existing repository is Dirhaya/Workout-App.
+2. Updates publish through the existing GitHub Pages deployment.
 3. Open that URL in Safari on your iPhone. Use **Share → Add to Home Screen**; enable **Open as Web App** if shown, then Add.
 4. Launch Workout Log from its Home Screen icon while online once. Its service worker caches the app for later offline use. Test opening it in airplane mode before relying on offline access.
 5. Fill in the short profile, then use **Train** or **Log**. No fitness assessment is required. Benchmarks remain unmeasured until you choose to assess.
@@ -42,7 +42,9 @@ Screenshots use local space; export and remove older attachments if storage fill
 
 ## Garmin screenshot logging
 
-Add a screenshot under **Log → Garmin screenshot**. In iPhone Photos, copy its text with Live Text and paste it into Workout Log. Parse and verify the fields, especially elapsed time, units and date, before saving. Enter unsupported fields manually. This release does not perform automatic image OCR or Garmin account synchronization.
+Use **Log → Read screenshot automatically** and choose a photo, paste an image from the clipboard, or use the paste area. Tesseract.js reads English Garmin strength tables locally, separates columns and groups sets by exercise. Review exercise matches, reps, loads, date and units before saving. Wrapped exercise names are supported. Missing loads remain unknown; set times are not total workout duration. Only visible rows are imported. The source image is held in memory, not uploaded or stored with the import. The editable extracted draft autosaves.
+
+OCR is not perfect. Cropped columns, different layouts and recognition errors require correction. Photo selection is the fallback when Safari clipboard access is unavailable. Internet is needed for initial OCR assets; browser caching is not a guarantee of offline OCR. Garmin account synchronization is not provided.
 
 ## Training and levels
 
@@ -56,7 +58,7 @@ Two strength sessions form the starting plan. Available barbell totals are 20, 4
 - `.nojekyll`: plain static hosting.
 - `tests/check.cjs`: automated logic checks.
 
-No secrets, API keys, third-party scripts or build step are required. This ZIP is source code, not a signed `.ipa` or an already-published repository.
+No secrets, API keys or build step are required. Optional OCR and assistant features download third-party runtime/model assets.
 
 ## Documentation
 
@@ -81,3 +83,18 @@ This updates the existing app and retains the `arise-v1` storage key to preserve
 - The new `upgrade.js` extends the original app. `sw.js` cache version is bumped. Version appears at the bottom of the app. Existing users should open online once to receive this first update.
 
 Automated checks cover new parsing and mapping, data compatibility and fractional-minute formatting. Browser rendering and physical iPhone behavior still require device verification.
+
+
+## Version 2.1 — screenshot reader and local assistant
+
+**Log → Ask the on-device assistant → Download & load model** loads SmolLM2-360M-Instruct (ONNX q8, about 363 MB of weights plus runtime files). Inference runs in a browser worker using WebAssembly, while the app is open. It is a text model; Tesseract handles images separately. No prompts or workout records are sent to an inference server. Model/runtime hosts see ordinary download requests.
+
+The assistant receives relevant app guidance and optionally the last two workout logs. It has no write tools. It can make mistakes and is not a form checker or medical advisor. Stop / unload terminates the worker and releases model memory. OCR unloads the assistant to avoid running both together. Browser suspension may interrupt processing. Downloads may be cached or evicted; first use requires internet. No paid service or API key is required.
+
+Pinned dependencies:
+- Transformers.js 3.8.1: https://github.com/huggingface/transformers.js
+- Model: https://huggingface.co/onnx-community/SmolLM2-360M-Instruct-ONNX (revision fe7c7db4c8921c9e3fa1c65cfd296fb3b1b1a8f9)
+- Original model / license: https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct
+- Tesseract.js 6.0.1 / core 6.0.0: https://github.com/naptha/tesseract.js
+
+The model is a modest download-size choice, not a guarantee of accuracy or speed on every phone. Logic tests and native Tesseract experiments were run; browser inference, browser OCR and physical iPhone performance have not been verified. A download/runtime error leaves the normal workout app and built-in app guide available. Existing workout data and the storage key are preserved.

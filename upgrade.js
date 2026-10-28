@@ -1,5 +1,5 @@
 /* Workout Log 2: catalog, text imports, muscle map and durable drafts. */
-const APP_VERSION='2.0.0';
+const APP_VERSION='2.1.0';
 const MUSCLES={chest:'Chest',back:'Back',shoulders:'Shoulders',biceps:'Biceps',triceps:'Triceps',core:'Core',quads:'Quads',glutes:'Glutes',hamstrings:'Hamstrings',calves:'Calves',forearms:'Forearms'};
 const BASE_MAP={push:['chest','triceps','shoulders'],row:['back','biceps'],press:['shoulders','triceps'],squat:['quads','glutes'],hinge:['glutes','hamstrings'],core:['core'],calf:['calves'],split:['quads','glutes'],bench:['chest','triceps','shoulders'],barsquat:['quads','glutes'],pullup:['back','biceps']};
 Object.entries(BASE_MAP).forEach(([id,groups])=>E[id].groups=groups);
