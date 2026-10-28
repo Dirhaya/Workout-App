@@ -67,3 +67,17 @@ No secrets, API keys, third-party scripts or build step are required. This ZIP i
 ## Compatibility
 
 The internal browser-storage key is retained so existing workout records and backups remain compatible. The legacy cache prefix is retained for cleanup, with a new cache version.
+
+## Version 2.0 update
+
+This updates the existing app and retains the `arise-v1` storage key to preserve installed users' records. No assessment is required.
+
+- 90 built-in exercises, plus user-created movements with explicit muscle tags. Custom workout templates can be edited.
+- Home, full-body, upper/lower and push/pull/legs templates, plus Cindy, Annie, Fran and Grace references. Advanced benchmarks are editable references, not automatic prescriptions.
+- Log → Paste workout accepts one line per exercise, such as `Bench press: 3 x 8 at 40 kg, RIR 2`. Missing data remains blank; unknown names must be resolved before saving. Verify kg versus pounds and per-dumbbell versus total load. Runs still use Quick log.
+- Front/back muscle map shows weekly recorded set exposure, including assisting muscles. It is not a measure of hypertrophy or recovery. Tap a region to see history and comparable exercise results. Summary-only historical sessions cannot be assigned retrospectively without structured data.
+- Input drafts autosave on the device. Completed-set logging remains explicit so unfinished work is not counted. Backups include custom movements.
+- The app checks for published updates on opening, returning online, foregrounding, and every minute while visible. Downloaded updates apply on the home/progress screen; active workouts, forms and logging screens defer reload. Offline devices update after reconnecting. iOS background execution is not assumed.
+- The new `upgrade.js` extends the original app. `sw.js` cache version is bumped. Version appears at the bottom of the app. Existing users should open online once to receive this first update.
+
+Automated checks cover new parsing and mapping, data compatibility and fractional-minute formatting. Browser rendering and physical iPhone behavior still require device verification.

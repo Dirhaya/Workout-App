@@ -1,9 +1,11 @@
 const fs=require('fs'), vm=require('vm'), assert=require('node:assert/strict');
-const code=fs.readFileSync(__dirname+'/../index.html','utf8').match(/<script>([\s\S]*)<\/script>/)[1];
+const code=fs.readFileSync(__dirname+'/../index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
 const nodes=new Map(), local=new Map();
-function node(id){if(!nodes.has(id))nodes.set(id,{value:'',checked:false,hidden:false,style:{},dataset:{},innerHTML:'',textContent:'',focus(){},select(){},querySelector(){return null}});return nodes.get(id)}
-const context=vm.createContext({console,Intl,Date,Math,Number,String,Object,Array,Set,Map,JSON,RegExp,Error,Promise,Blob,crypto:require('node:crypto').webcrypto,structuredClone,document:{getElementById:node,querySelector:node,body:{style:{}},querySelectorAll:()=>[]},localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v)},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,clearInterval(){},window:{scrollTo(){}},confirm:()=>true,navigator:{},location:{protocol:'file:'}});
+function node(id){if(!nodes.has(id))nodes.set(id,{value:'',checked:false,hidden:false,style:{},dataset:{},innerHTML:'',textContent:'',focus(){},select(){},appendChild(){},after(){},querySelector(){return null}});return nodes.get(id)}
+const context=vm.createContext({console,Intl,Date,Math,Number,String,Object,Array,Set,Map,JSON,RegExp,Error,Promise,Blob,crypto:require('node:crypto').webcrypto,structuredClone,document:{getElementById:node,querySelector:node,body:{style:{}},querySelectorAll:()=>[],createElement:()=>node('new-element'),addEventListener(){},visibilityState:'visible'},localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v)},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,clearInterval(){},window:{scrollTo(){}},confirm:()=>true,navigator:{},location:{protocol:'file:'}});
+vm.runInContext("globalThis.window=globalThis;globalThis.scrollTo=()=>{};globalThis.addEventListener=()=>{}",context);
 vm.runInContext(code,context);
+vm.runInContext(fs.readFileSync(__dirname+'/../upgrade.js','utf8'),context);
 const run=s=>vm.runInContext(s,context), set=(id,v)=>node(id).value=String(v);
 assert.match(node('app').innerHTML,/Your next level, Sultan/);
 for(const tab of ['home','train','log','progress']){run(`go('${tab}')`);assert(node('app').innerHTML.length>100)}
@@ -32,3 +34,27 @@ run("trainingTab='suggested';go('train');start('a')");node('familiar').checked=t
 set('weight-0',0);set('reps-0',10);set('rir-0',2);run('draftSet(0,"reps","10");draftSet(0,"rir","2")');assert(run('validateBackup(S)'));
 assert.equal(run('parseTime("5:00")'),300);assert(Number.isNaN(run('parseTime("5:99")')));assert.equal(run('paceText(299.9)'),'5:00');
 console.log('PASS: all screens rendered; profile; assessment; session save; daily XP cap; Garmin parser / elapsed-time priority; zone goal / zone-change guard; backup round-trip; invalid-backup rejection; regular session draft; time parsing.');
+
+assert(run('Object.keys(E).length >= 80'));
+assert.equal(run("parseWorkoutText('Bench press: 3 x 8 at 40 kg, RIR 2')[0].id"),'bench');
+assert.equal(run("parseWorkoutText('Bench press: 3 x 8 at 40 kg, RIR 2')[0].weight"),40);
+assert.equal(run("parseWorkoutText('Alien lift: 3 x 8 at 40 kg')[0].id"),'');
+assert.equal(run("parseWorkoutText('Bench: 3 x 8 at 100 lb')[0].weight"),45.36);
+assert.equal(run("parseWorkoutText('Pull-ups: 3 x 5 bodyweight')[0].weight"),0);
+assert.equal(run("parseWorkoutText('Plank: 2 x 30 sec bodyweight')[0].unit"),'sec');
+assert.equal(run("parseWorkoutText('Bench: 3 x 8')[0].weight"),'');
+run("S.logs.push({id:crypto.randomUUID(),title:'Fractional time',date:day(),minutes:49.3833333333,kind:'strength',sets:[{id:'bench',variation:'Flat',weight:40,reps:8,rir:null,done:true}]})");
+assert(!run('home()').includes('49.383333'));
+assert(run("muscleData('chest').week.length > 0"));
+assert(run('validateBackup(S)'));
+run("S.exercises['user_123abc']={name:'Custom row',groups:['back'],unit:'reps'};hydrateExercises()");
+assert(run("!!E['user_123abc']"));assert(run('validateBackup(S)'));
+run("copy=structuredClone(S);copy.exercises['user_123abc'].groups=['fake']");assert(!run('validateBackup(copy)'));
+console.log('PASS: expanded catalog, text parser, unknown fields, pounds conversion, seconds, nullable RIR, rounded minutes, muscle attribution and custom-exercise backup validation.');
+run("S.active=null;tab='log';logTab='text';dialogKey='';importRows=parseWorkoutText('Bench press: 3 x 8 at 40 kg, RIR 2')");
+Object.entries({'import-date':run('day()'),'import-minutes':'30','import-title':'Chest day','workout-text':'Bench press: 3 x 8 at 40 kg, RIR 2','import-id-0':'bench','import-sets-0':3,'import-reps-0':8,'import-weight-0':40,'import-rir-0':2,'import-variation-0':'Flat bench, total kg'}).forEach(([k,v])=>set(k,v));
+node('include-0').checked=true;node('import-confirm').checked=true;
+const before=run('S.logs.length');run('saveTextWorkout()');assert.equal(run('S.logs.length'),before+1);assert.equal(run('S.logs[S.logs.length-1].sets.length'),3);
+run("tab='log';logTab='text';dialogKey='';globalThis.field={id:'workout-text',type:'textarea',value:'Draft workout',readOnly:false};document.querySelectorAll=()=>[field];captureDraft();field.value='';restoreDraft()");
+assert.equal(run('field.value'),'Draft workout');assert.equal(run("JSON.parse(localStorage.getItem('arise-v1')).drafts['log:text']['workout-text']"),'Draft workout');
+console.log('PASS: reviewed text import saves completed sets; input drafts persist and restore. Built-in exercises:',run("Object.keys(E).filter(x=>!x.startsWith('user_')).length"));
