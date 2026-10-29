@@ -1,0 +1,24 @@
+/* System theme: quiet surfaces, blue accents, compact controls. */
+:root{--bg:#080d14;--panel:#101823;--ink:#edf3fa;--muted:#9baabd;--line:#243142;--purple:#86c6ff;--mint:#95dcc8}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:920px;margin:auto;padding-top:12px}
+.topbar{max-width:920px;margin:auto;border-bottom:1px solid var(--line);padding-top:max(16px,env(safe-area-inset-top));padding-bottom:14px}
+h1{font-size:30px;letter-spacing:-.8px}h2{font-size:21px;letter-spacing:-.4px}h3{font-size:16px}
+.greeting{margin:16px 0 22px}.greeting p{margin-top:8px;font-size:14px}
+.eyebrow{font-size:10px;letter-spacing:1.8px;color:#89b6dc}.badge{letter-spacing:.5px;background:#182737;border:1px solid #2d4055;color:#b7d9f5}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:none}
+.btn{background:#a1d3ff;color:#0c1724;border-radius:9px;font-size:14px;min-height:46px;font-weight:650}.btn.secondary{background:#182638;color:#c3e3ff;border:1px solid #324b65}.link{color:#a3ccee;min-height:44px}
+.iconbtn{border-radius:10px;background:#141e2c}.nav{background:#0c131eee;border-color:var(--line)}.nav button.active{color:#a4d7ff}.nav button.active .icon{filter:none}
+.tabs{gap:4px;background:#101923;padding:4px;border-radius:10px}.tabs button{border:0;padding:10px 12px}.tabs button.on{background:#263b51;color:#e2f0ff}
+input,select,textarea{background:#0b121d;border-color:#344455;border-radius:8px}button:focus-visible,a:focus-visible{outline:2px solid #a1d3ff;outline-offset:3px}
+.anatomy-pair{max-width:450px;margin:12px auto}.anatomy{height:290px!important;width:48%!important}
+.rank-mark{background:#14283c;border:1px solid #395b7b;border-radius:8px;min-width:60px;padding:8px}.rank-mark strong{color:#a7d6ff;font-size:30px}
+.muscle-buttons{display:flex;gap:6px;overflow:auto;flex-wrap:nowrap;padding:8px 0}.muscle-buttons button{flex-shrink:0;min-height:36px}
+.map-legend{font-size:11px}.muscle-card>.small{font-size:11px}.muscle-card #muscle-detail{font-size:12px}.xp-summary{font-size:12px;color:var(--muted);padding:14px 2px 8px}.meter{height:4px;background:#253344}.meter span{background:#86c6ff}
+.quest-board h2{margin:7px 0}.quest-line{display:flex;width:100%;align-items:center;text-align:left;gap:14px;padding:17px 0;border-top:1px solid var(--line);margin-top:4px}
+.quest-line>span:nth-child(2){flex:1}.quest-line b{display:block;font-size:14px;font-weight:600}.quest-line small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.quest-day{font-size:10px;letter-spacing:1px;color:#8da4bd;width:30px}.quest-check{font-size:20px;color:#8bc7fa}.today-quest .quest-day{color:#a5d8ff}.today-quest b{color:#a5d8ff}
+.routine-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0;border-bottom:1px solid var(--line)}.routine-row small{display:block;color:var(--muted);margin-top:5px}.routine-row b{font-size:14px}.swap-button{font-size:11px;border:1px solid #37516a;border-radius:6px;padding:8px;min-height:44px;white-space:nowrap;color:#acd4f6}
+.alternative-option{display:flex;justify-content:space-between;text-align:left;gap:10px;width:100%;padding:15px 0;border-bottom:1px solid var(--line)}.alternative-option small{color:var(--muted)}.system-notice{border:1px solid #527c9f;background:#112235;padding:24px}.system-notice h2{margin:16px 0}.system-notice p{margin-top:14px}.run-brief{line-height:1.8;padding-top:18px}
+.modal{background:#101923;border-color:#334b63;border-radius:16px}.note,.subtle{background:#111e2c;border-color:#304052}.save-status{color:#8b9daf;font-size:10px;padding:24px 0}.hero:before,.hero:after{display:none}
+@media(max-width:480px){main{padding-left:16px;padding-right:16px}.card{padding:16px}.anatomy{height:265px!important}.topbar{padding-left:16px;padding-right:16px}.modal{border-radius:18px 18px 0 0}.quest-line{gap:11px}.greeting h1{font-size:28px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}

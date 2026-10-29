@@ -80,7 +80,7 @@ This updates the existing app and retains the `arise-v1` storage key to preserve
 - Front/back muscle map shows weekly recorded set exposure, including assisting muscles. It is not a measure of hypertrophy or recovery. Tap a region to see history and comparable exercise results. Summary-only historical sessions cannot be assigned retrospectively without structured data.
 - Input drafts autosave on the device. Completed-set logging remains explicit so unfinished work is not counted. Backups include custom movements.
 - The app checks for published updates on opening, returning online, foregrounding, and every minute while visible. Downloaded updates apply on the home/progress screen; active workouts, forms and logging screens defer reload. Offline devices update after reconnecting. iOS background execution is not assumed.
-- The new `upgrade.js` extends the original app. `sw.js` cache version is bumped. Version appears at the bottom of the app. Existing users should open online once to receive this first update.
+- The existing app was subsequently divided into feature modules. `sw.js` cache version is bumped. Version appears at the bottom of the app. Existing users should open online once to receive this first update.
 
 Automated checks cover new parsing and mapping, data compatibility and fractional-minute formatting. Browser rendering and physical iPhone behavior still require device verification.
 
@@ -98,3 +98,31 @@ Pinned dependencies:
 - Tesseract.js 6.0.1 / core 6.0.0: https://github.com/naptha/tesseract.js
 
 The model is a modest download-size choice, not a guarantee of accuracy or speed on every phone. Logic tests and native Tesseract experiments were run; browser inference, browser OCR and physical iPhone performance have not been verified. A download/runtime error leaves the normal workout app and built-in app guide available. Existing workout data and the storage key are preserved.
+
+## Version 2.2 — System interface and weekly program
+
+The updated interface uses compact workout rows (inspired by Strong) and a weekly training map (inspired by Hevy), with original blue System panels, Hunter rank and weekly quests. No artwork or source code from those apps is copied.
+
+The supplied eight-week routine is available under Today and Train → Weekly quests:
+Monday full body A, Tuesday easy run, Wednesday full body B, Thursday mobility, Friday quality run, Saturday full body C, Sunday rest. The image's inconsistent week labels are normalized to weeks 1–8. Easy-run durations use the two-week ranges in the main Run 1 panel. Tempo and intervals alternate. Generic bpm ranges are not personal zone measurements.
+
+Each gym quest opens an overview with set targets and Swap controls. Alternatives preserve the training role, not equivalent load or biomechanics. Saved routine substitutions affect future sessions; active-session substitutions reset unrecorded values and cannot replace completed sets. Logging, not opening a plan, earns XP. Three planned sets are provided; partial sessions remain supported.
+
+Schedule lets you set a Monday start and Dubai reminder time. Export reminders creates an ICS calendar with 56 dated events and 15-minute alerts. The user must import the file into a calendar and enable its notifications. Re-exporting can duplicate events; changes in the app do not edit imported events. In-app quest notices appear on first open each day. This static app does not run an independent push-notification server or promise delivery while closed.
+
+### Source boundaries
+
+- index.html: document shell and explicit script order.
+- styles.css / system.css: base layout and System theme.
+- app.js: existing workout, goals, profile and session behavior.
+- storage.js: guarded local persistence and read-failure protection.
+- catalog.js: exercises and custom routine editing.
+- text-import.js / image-import.js: reviewed import paths.
+- muscles.js / body-map.js: activity calculations and original interactive SVG anatomy.
+- drafts.js: input drafts and backup validation.
+- updates.js / sw.js: guarded update activation and release-level asset caching.
+- assistant.js / assistant-worker.js: optional local model lifecycle.
+- program.js: weekly program, alternatives and calendar export.
+- bootstrap.js: initial render.
+
+The legacy storage key remains unchanged. This is an incremental refactor, not a claim that all technical debt is gone. Existing global UI handlers remain for compatibility. Tests use simulated DOM and worker stubs; real Safari rendering, iOS calendar import and model performance still require device verification.

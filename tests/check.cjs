@@ -1,15 +1,16 @@
 const fs=require('fs'), vm=require('vm'), assert=require('node:assert/strict');
-const code=fs.readFileSync(__dirname+'/../index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const code=fs.readFileSync(__dirname+'/../app.js','utf8');
 const nodes=new Map(), local=new Map();
 function node(id){if(!nodes.has(id))nodes.set(id,{value:'',checked:false,hidden:false,style:{},dataset:{},innerHTML:'',textContent:'',focus(){},select(){},appendChild(){},after(){},querySelector(){return null}});return nodes.get(id)}
 const context=vm.createContext({console,Intl,Date,Math,Number,String,Object,Array,Set,Map,JSON,RegExp,Error,Promise,Blob,crypto:require('node:crypto').webcrypto,structuredClone,document:{getElementById:node,querySelector:node,body:{style:{}},querySelectorAll:()=>[],createElement:()=>node('new-element'),addEventListener(){},visibilityState:'visible'},localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v)},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,clearInterval(){},window:{scrollTo(){}},confirm:()=>true,navigator:{},location:{protocol:'file:'}});
 vm.runInContext("globalThis.window=globalThis;globalThis.scrollTo=()=>{};globalThis.addEventListener=()=>{}",context);
+vm.runInContext(fs.readFileSync(__dirname+'/../storage.js','utf8'),context);
 vm.runInContext(code,context);
-vm.runInContext(fs.readFileSync(__dirname+'/../upgrade.js','utf8'),context);
+for(const f of ['catalog.js','text-import.js','muscles.js','drafts.js','updates.js'])vm.runInContext(fs.readFileSync(__dirname+'/../'+f,'utf8'),context);
 vm.runInContext(fs.readFileSync(__dirname+'/../image-import.js','utf8'),context);
 vm.runInContext(fs.readFileSync(__dirname+'/../assistant.js','utf8'),context);
 const run=s=>vm.runInContext(s,context), set=(id,v)=>node(id).value=String(v);
-assert.match(node('app').innerHTML,/Your next level, Sultan/);
+assert(node('app').innerHTML.length>100);
 for(const tab of ['home','train','log','progress']){run(`go('${tab}')`);assert(node('app').innerHTML.length>100)}
 for(const pane of ['suggested','assess','custom'])run(`trainingTab='${pane}';go('train')`);
 for(const pane of ['quick','garmin','history'])run(`logTab='${pane}';go('log')`);
@@ -96,3 +97,28 @@ assert(run("assistantContext('screenshot garmin').includes('OCR does not infer')
 run("screenshotBusy=true");assert.equal(run('updateSafe()'),false);run("screenshotBusy=false;assistantBusy=true");assert.equal(run('updateSafe()'),false);run('assistantBusy=false');
 for(const pane of ['image','assistant'])run(`logTab='${pane}';go('log')`);
 console.log('PASS: OCR grouping, wrapped names, nullable loads, unit/repetition validation, reviewed save, backup and assistant/update guards.');
+
+// Program integration runs against the same state and renderer as the existing app.
+vm.runInContext(fs.readFileSync(__dirname+'/../body-map.js','utf8'),context);
+vm.runInContext(fs.readFileSync(__dirname+'/../program.js','utf8'),context);
+run("document.querySelectorAll=()=>[];S.active=null;S.program={start:weekDays()[0],time:'18:00',swaps:{},notices:true};render()");
+assert.equal(run("WEEK_PLAN.filter(q=>q.kind==='strength').length"),3);
+assert.equal(run("WEEK_PLAN.filter(q=>q.kind==='run').length"),2);
+assert.equal(run("WEEK_PLAN.find(q=>q.key==='b').moves.length"),7);
+assert.equal(run("questCalendar().split('BEGIN:VEVENT').length-1"),56);
+assert.equal(run("questCalendar().split('BEGIN:VALARM').length-1"),56);
+assert(run("runBrief(WEEK_PLAN[4],1).startsWith('Tempo')"));
+assert(run("runBrief(WEEK_PLAN[4],2).startsWith('Intervals')"));
+assert(run("alternatives('barsquat').includes('airsquat')"));
+run("applyAlternative('a',0,'legpress',false)");
+assert.equal(run("programMoves(WEEK_PLAN[0])[0]"),'legpress');
+run("startQuest('a')");node('familiar').checked=true;node('safeties').checked=true;node('begin-confirm').onclick();
+assert.equal(run("S.active.sets.length"),18);
+assert.equal(run("S.active.questKey"),'a');
+assert.equal(run("S.active.sets[0].id"),'legpress');
+assert.equal(run("S.active.sets.at(-1).target"),'3 × 30–60 sec');
+assert.match(run('session()'),/Swap ⇄/);
+assert.match(run('home()'),/WEEKLY QUESTS/);
+assert(!run('anatomy()').includes('undefined'));
+for(const pane of ['image','text','quick','history','assistant'])run(`logTab='${pane}';go('log')`);
+console.log('PASS: program schedule, 56 calendar alerts, alternating runs, saved alternatives, session targets and screen integration.');
