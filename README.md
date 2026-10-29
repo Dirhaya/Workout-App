@@ -126,3 +126,9 @@ Schedule lets you set a Monday start and Dubai reminder time. Export reminders c
 - bootstrap.js: initial render.
 
 The legacy storage key remains unchanged. This is an incremental refactor, not a claim that all technical debt is gone. Existing global UI handlers remain for compatibility. Tests use simulated DOM and worker stubs; real Safari rendering, iOS calendar import and model performance still require device verification.
+
+## Version 2.2.1 — lighter assistance and separate reminder times
+
+The assistant now answers common app and workout questions from its local guide immediately. The optional on-device model is SmolLM2-135M-Instruct-ONNX, int8 (about 136 MB of weights, plus runtime). The model receives shorter prompts and produces shorter answers, reducing memory pressure, though iPhone memory and runtime performance remain unverified. The older 360M model is no longer loaded by the app; browser caches may retain previously downloaded files until iOS clears them.
+
+The calendar schedule defaults to runs at 06:00 and gym at 18:00 Dubai time. Both are independently editable under Today → Schedule; recovery has a 19:00 reminder. Export a fresh calendar file after changing times. Previously imported calendar events are independent and need removal if you want to avoid duplicate alerts.

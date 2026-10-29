@@ -1,1 +1,1 @@
-{"name":"workout-log","version":"2.2.0","private":true,"scripts":{"test":"node tests/check.cjs","start":"python3 -m http.server 8080 --bind 127.0.0.1"},"engines":{"node":">=20"}}
+{"name":"workout-log","version":"2.2.1","private":true,"scripts":{"test":"node tests/check.cjs","start":"python3 -m http.server 8080 --bind 127.0.0.1"},"engines":{"node":">=20"}}

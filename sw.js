@@ -1,5 +1,5 @@
 /* A release is installed as one cache. Never mix old scripts with a new shell. */
-const CACHE = 'arise-app-v6';
+const CACHE = 'arise-app-v7';
 const ROOT = new URL('./', self.location.href).href;
 const ASSETS = ['./','./index.html','./styles.css','./system.css','./storage.js','./app.js','./catalog.js','./text-import.js','./muscles.js','./body-map.js','./drafts.js','./updates.js','./program.js','./bootstrap.js','./image-import.js','./assistant.js','./assistant-worker.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install', event => {
