@@ -22,3 +22,5 @@ input,select,textarea{background:#0b121d;border-color:#344455;border-radius:8px}
 .modal{background:#101923;border-color:#334b63;border-radius:16px}.note,.subtle{background:#111e2c;border-color:#304052}.save-status{color:#8b9daf;font-size:10px;padding:24px 0}.hero:before,.hero:after{display:none}
 @media(max-width:480px){main{padding-left:16px;padding-right:16px}.card{padding:16px}.anatomy{height:265px!important}.topbar{padding-left:16px;padding-right:16px}.modal{border-radius:18px 18px 0 0}.quest-line{gap:11px}.greeting h1{font-size:28px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+
+.modal footer:has(.btn.full + .btn.full){flex-direction:column}.modal footer:has(.btn.full + .btn.full) .btn{width:100%}

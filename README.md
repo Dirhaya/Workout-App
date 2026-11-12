@@ -139,3 +139,10 @@ The calendar schedule defaults to runs at 06:00 and gym at 18:00 Dubai time. Bot
 The weekly quests are now Monday easy run, Tuesday gym A, Wednesday mobility/recovery, Thursday gym B, Friday quality run, Saturday home gym C, and Sunday rest. The Saturday routine uses chair squats, incline push-ups, band rows, glute bridges, band overhead presses, hanging knee raises and a side plank. It assumes only the barbell/plates, rack, adjustable bench, pull-up/dip station, bands and bodyweight you listed. If you already saved a Saturday replacement requiring a machine or dumbbells, the schedule displays the original home movement; it does not erase the saved replacement. Only home-compatible replacements are offered on Saturday. Logged sessions and completed quest keys are unchanged.
 
 Calendar export follows the new day order at your saved gym and run reminder times. If you imported an older ICS file, remove its old events from your calendar before importing the new one; app updates cannot change already imported calendar entries.
+
+
+## Version 2.3 — exercise alternatives and short bodyweight quests
+
+Each gym quest (Tuesday A, Thursday B and Saturday home C) shows a named bodyweight option beside an exercise when one is available, and an **Alternatives** button that opens comparable choices. Some shoulder and pulling machine movements have no equivalent no-equipment replacement; the UI explicitly describes the substitute as a lighter pattern instead of claiming identical strength training. Home-gym Saturday alternatives remain limited to your equipment.
+
+**Start short bodyweight quest** opens five familiar movement patterns with one set each: chair squat, push-up (scale to a wall if needed), prone back raise, glute bridge and a plank. No planned reps are marked complete. Record only actual sets and actual duration; finished short sessions count toward that day's weekly quest and consistency XP under the same daily cap. The full quest and saved exercise swaps stay available.
