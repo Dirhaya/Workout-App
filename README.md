@@ -132,3 +132,10 @@ The legacy storage key remains unchanged. This is an incremental refactor, not a
 The assistant now answers common app and workout questions from its local guide immediately. The optional on-device model is SmolLM2-135M-Instruct-ONNX, int8 (about 136 MB of weights, plus runtime). The model receives shorter prompts and produces shorter answers, reducing memory pressure, though iPhone memory and runtime performance remain unverified. The older 360M model is no longer loaded by the app; browser caches may retain previously downloaded files until iOS clears them.
 
 The calendar schedule defaults to runs at 06:00 and gym at 18:00 Dubai time. Both are independently editable under Today → Schedule; recovery has a 19:00 reminder. Export a fresh calendar file after changing times. Previously imported calendar events are independent and need removal if you want to avoid duplicate alerts.
+
+
+## Version 2.2.2 — your updated weekly schedule
+
+The weekly quests are now Monday easy run, Tuesday gym A, Wednesday mobility/recovery, Thursday gym B, Friday quality run, Saturday home gym C, and Sunday rest. The Saturday routine uses chair squats, incline push-ups, band rows, glute bridges, band overhead presses, hanging knee raises and a side plank. It assumes only the barbell/plates, rack, adjustable bench, pull-up/dip station, bands and bodyweight you listed. If you already saved a Saturday replacement requiring a machine or dumbbells, the schedule displays the original home movement; it does not erase the saved replacement. Only home-compatible replacements are offered on Saturday. Logged sessions and completed quest keys are unchanged.
+
+Calendar export follows the new day order at your saved gym and run reminder times. If you imported an older ICS file, remove its old events from your calendar before importing the new one; app updates cannot change already imported calendar entries.
