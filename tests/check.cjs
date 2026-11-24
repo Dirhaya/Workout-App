@@ -161,6 +161,7 @@ assert.equal(run("S.active.questKey"),'b');
 assert.equal(run("S.active.sets[2].id"),'proneback');
 assert.match(run('session()'),/Alternatives ⇄/);
 console.log('PASS: gym alternatives, bodyweight fallback, five real uncompleted sets, quest attribution and preserved full plan.');
+for(let i=1;i<5;i++)set('reps-'+i,'');
 set('weight-0',0);set('reps-0',8);set('rir-0',2);run('saveSet(0)');
 assert.equal(run('S.active.sets.filter(s=>s.done).length'),1);
 set('session-date',run('day()'));set('session-duration','12');set('session-notes','Short, controlled');
@@ -240,3 +241,44 @@ node('ocr-confirm').checked=true;run('saveScreenshotWorkout()');
 assert.equal(run('S.active'),null);
 assert.equal(run('S.logs.at(-1).questKey'),'b');
 console.log('PASS: Garmin import safely replaces an empty logger for the same quest.');
+
+// Finish can save entered sets directly, without +, RIR, or a duration.
+run("S.active=null;startQuest('a')");
+for(let i=0;i<18;i++){set('reps-'+i,'');set('rir-'+i,'');set('weight-'+i,0)}
+set('weight-0',45);set('reps-0',8);set('session-date',run('day()'));set('session-duration','');set('session-notes','Gym session');
+const autoFinishBefore=run('S.logs.length');run('finish()');
+assert.equal(run('S.logs.length'),autoFinishBefore+1);
+assert.equal(run('S.logs.at(-1).sets.length'),1);
+assert.equal(run('S.logs.at(-1).sets[0].weight'),45);
+assert.equal(run('S.logs.at(-1).sets[0].rir'),null);
+assert.equal(run('S.logs.at(-1).durationUnknown'),true);
+assert(run('validateBackup(S)'));
+run("startQuest('a')");for(let i=0;i<18;i++)set('reps-'+i,'');
+set('weight-0',45);set('reps-0',8);set('rir-0','');
+run('globalThis.savedPersist=persist;persist=()=>false');run('finish()');
+assert(run('!!S.active'));assert.equal(run('S.logs.length'),autoFinishBefore+1);
+run('persist=savedPersist;S.active=null');
+
+// Install the same compact Garmin review used in production.
+vm.runInContext(fs.readFileSync(__dirname+'/../garmin-import.js','utf8'),context);
+run("globalThis.fitPayload={rows:[{name:'barbell Bench Press',reps:8,weight:45,seconds:32},{name:'barbell Bench Press',reps:null,weight:45,seconds:30}],date:day(),minutes:45};S.garminQuest='a';delete S.screenshotDraft;importFitRows(fitPayload)");
+assert.equal(run('S.screenshotDraft.rows[0].id'),'bench');
+assert.equal(run('S.screenshotDraft.importSource'),'fit');
+assert.equal(run('S.screenshotDraft.rows.length'),2);
+assert.equal(run('screenshotSets(S.screenshotDraft)[1].reps'),null);
+assert.match(run('screenshotReview()'),/Exercise match · applied to this group/);
+for(const [id,value] of [['ocr-date',run('day()')],['ocr-unit','kg'],['ocr-quest','a'],['ocr-title','From Garmin'],['ocr-minutes','45'],['ocr-convention','unknown']])set(id,value);
+const fileBefore=run('S.logs.length');run('saveScreenshotWorkout()');
+assert.equal(run('S.logs.length'),fileBefore+1);
+assert.equal(run('S.logs.at(-1).sets.length'),2);
+assert.equal(run('S.logs.at(-1).questKey'),'a');
+assert.equal(run('S.logs.at(-1).sets[1].reps'),null);
+assert(run('validateBackup(S)'));
+run("selectedMuscle='chest';invalidateMuscleData()");
+assert(!run('muscleDetail()').includes('null reps'));
+assert(!run('muscleDetail()').includes('null kg'));
+run("mergeScreenshotDraft([{...garminRow,name:'Machine unknown',id:'',reps:null,weight:null}],'',false);matchImportGroup('machine unknown','chestpress')");
+assert.equal(run('S.importAliases["machine unknown"]'),'chestpress');
+assert.equal(run("identifyExercise('Machine unknown')"),'chestpress');
+assert.equal(run("screenshotSets({...S.screenshotDraft,unit:''})[0].weight"),null);
+console.log('PASS: direct Finish saves entered sets, optional effort/duration, gym loads, failed-save recovery, compact FIT review and remembered exercise matching.');

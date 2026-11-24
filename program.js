@@ -60,7 +60,7 @@ function startQuest(key,short=false){
  S.active={
   id:crypto.randomUUID(),type:'custom',questKey:key,shortQuest:short,
   title:q.name+(short?' · short bodyweight':''),start:Date.now(),date:day(),
-  assessment:false,notes:'',
+  assessment:false,location:q.home?'home':'gym',notes:'',
   sets:moves.flatMap((id,i)=>Array.from({length:short?1:3},()=>({
    id,variation:E[id].variation,weight:short?0:E[id].bar?20:0,
    reps:'',rir:'',done:false,
@@ -98,4 +98,4 @@ const questSaveQuick=saveQuick;
 saveQuick=function(...args){const n=S.logs.length;questSaveQuick(...args);if(S.logs.length>n&&S.pendingQuest&&S.logs.at(-1).kind==='run'){S.logs.at(-1).questKey=S.pendingQuest;delete S.pendingQuest;persist()}};
 trainingTab='quests';
 
-logging=function(){return heading('SYSTEM / FIELD LOG','Log a workout','Choose an input. Review it once.')+'<div class="tabs">'+[['image','Screenshot'],['text','Text'],['quick','Manual'],['history','History'],['assistant','Assistant']].map(([key,label])=>'<button class="'+(logTab===key?'on':'')+'" onclick="logTab=\''+key+'\';render()">'+label+'</button>').join('')+'</div>'+(logTab==='image'?screenshotPane():logTab==='assistant'?assistantPane():logTab==='text'||logTab==='garmin'?textImporter():logTab==='history'?history():quickForm(false,false))};
+logging=function(){return heading('SYSTEM / FIELD LOG','Log a workout','Choose an input. Review it once.')+'<div class="tabs">'+[['image','Garmin'],['text','Text'],['quick','Manual'],['history','History'],['assistant','Assistant']].map(([key,label])=>'<button class="'+(logTab===key?'on':'')+'" onclick="logTab=\''+key+'\';render()">'+label+'</button>').join('')+'</div>'+(logTab==='image'?screenshotPane():logTab==='assistant'?assistantPane():logTab==='text'||logTab==='garmin'?textImporter():logTab==='history'?history():quickForm(false,false))};

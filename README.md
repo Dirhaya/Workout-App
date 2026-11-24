@@ -167,3 +167,19 @@ Choose up to eight screenshots at once, processed sequentially on the device, or
 Check the workout date, units and visible sets before saving. Total duration, RIR and missing loads are never invented. An activity summary with calories and heart rate has no exercise/rep/load table and cannot be used for muscle attribution. A blank live logger for the same quest is cleared after a successful import; a logger with completed sets must first be finished or discarded. Failed persistence leaves the import draft available.
 
 Test coverage includes screenshot row merging, overlap/conflict handling, mixed-unit protection, quest completion credit, missing effort/duration handling and save failure recovery. Browser OCR accuracy and physical iPhone performance still depend on screenshot layout and device behavior.
+
+
+## Version 2.5 — save fixes and structured Garmin file import
+
+**Live logger fixes:** Save workout collects sets with reps entered, including sets not individually marked with +. Untouched planned sets stay out. RIR, load and total minutes may be unknown for ordinary sessions; assessment validation remains stricter. Gym sessions no longer use the home barbell's restricted weight increments. A failed final save restores the active session in memory and leaves a visible error instead of claiming success. Saving navigates directly to the muscle map.
+
+**Simpler Garmin review:** One exercise match per group, remembered for future imports. Set values are in collapsible rows, date and units stay visible, and saving itself confirms the review; no separate confirmation checkbox. Unknown reps can remain unknown and still contribute a recorded set to muscle activity. No performance comparisons are made with missing reps/load/effort. Included unknown exercise names still require a match so muscles are not guessed. A confirmed kg/lb choice is remembered. Screenshots remain available as a fallback.
+
+**Original FIT import:** Quest → Import Garmin workout → Choose Garmin .FIT file. The original activity file can be exported using the settings gear on the Garmin Connect website. Unzip an export in iPhone Files if necessary. File decoding runs in a worker with official @garmin/fitsdk 21.222.0, loaded from jsDelivr. It reads active strength sets, reps, scaled kg loads, source exercise names, activity date and elapsed duration; rest messages are omitted. It does not receive the Garmin account, send the file to a server, or infer missing exercises from the planned quest. Files without strength sets are rejected with a screenshot fallback. Original files may not contain exercise-name corrections later made in Connect. Review the names before saving.
+
+Checks include whole-session save with missing effort/duration, unrestricted ordinary gym load, failed-save recovery, nullable import reps, remembered exercise matching and linked-quest saving. A local generated binary activity was encoded/decoded with Garmin's official SDK to verify active/rest separation, exercise naming, 45 kg loads, reps, activity date and elapsed minutes; a corrupted CRC was rejected. The CDN download and physical Safari behavior have not been verified in this environment.
+
+Sources:
+- Garmin activity export: https://support.garmin.com/en-SG/?faq=W1TvTPW8JZ6LfJSfK512Q8
+- Official SDK / FIT Protocol license: https://github.com/garmin/fit-javascript-sdk
+- Reader distribution: https://cdn.jsdelivr.net/npm/@garmin/fitsdk@21.222.0/src/index.js

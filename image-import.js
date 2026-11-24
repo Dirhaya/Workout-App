@@ -42,10 +42,10 @@ function mergeScreenshotDraft(rows,detectedUnit,append){
   convention:'unknown',...previous,rows:merged,questKey:key,
   imageCount:(previous?.imageCount||0)+1,overlapSkipped:(previous?.overlapSkipped||0)+skipped
  };
- if(!S.screenshotDraft.unit)S.screenshotDraft.unit=detectedUnit;
+ if(!S.screenshotDraft.unit)S.screenshotDraft.unit=detectedUnit||S.importPrefs?.unit||'';
 }
 async function readScreenshots(files,append=false){
- if(screenshotBatchBusy||screenshotBusy)return toast('Wait for the current screenshot reading to finish.');
+ if(screenshotBatchBusy||screenshotBusy||(typeof fitBusy!=='undefined'&&fitBusy))return toast('Wait for the current import to finish.');
  const list=Array.from(files||[]);if(!list.length)return;
  if(list.length>8)return toast('Choose up to 8 screenshots at a time.');
  if(!append&&S.screenshotDraft?.rows?.length&&!confirm('Replace the current import draft with these screenshots?'))return;
@@ -82,7 +82,7 @@ function screenshotSets(d){if(!['kg','lb'].includes(d.unit))throw Error('Choose 
 function saveScreenshotWorkout(){
  try{
   const d=S.screenshotDraft;
-  if(!d||!$('ocr-confirm').checked)throw Error('Review the screenshots and tick the confirmation.');
+  if(!d)throw Error('Choose a workout to review first.');
   if(!validDate(d.date))throw Error('Choose a valid workout date.');
   const minutes=d.minutes===''?0:Number(d.minutes);
   if(!Number.isFinite(minutes)||minutes<0||minutes>600)throw Error('Check total minutes, or leave them blank.');
@@ -90,7 +90,7 @@ function saveScreenshotWorkout(){
   if(quest&&S.active?.questKey===quest.key&&S.active.sets.some(s=>s.done))throw Error('This quest already has sets in the live logger. Finish or discard that session before importing to avoid duplicate work.');
   const sets=screenshotSets(d),signature=JSON.stringify({date:d.date,sets});
   if(S.logs.some(l=>l.imageSignature===signature)&&!confirm('These sets appear to be already logged. Save another copy?'))return;
-  const log={id:crypto.randomUUID(),date:d.date,kind:'strength',title:d.title||quest?.name||'Garmin strength workout',questKey:quest?.key||null,minutes,durationUnknown:d.minutes==='',sets,imageSignature:signature,source:'Garmin Connect screenshots · reviewed on-device OCR',notes:'Only visible screenshot rows imported. Weight and RIR may be unknown.'};
+  const log={id:crypto.randomUUID(),date:d.date,kind:'strength',title:d.title||quest?.name||'Garmin strength workout',questKey:quest?.key||null,minutes,durationUnknown:d.minutes==='',sets,imageSignature:signature,source:d.importSource==='fit'?'Original Garmin FIT · reviewed':'Garmin Connect screenshots · reviewed on-device OCR',notes:'Only visible screenshot rows imported. Weight and RIR may be unknown.'};
   S.logs.push(log);
   const previousActive=S.active;
   if(quest&&S.active?.questKey===quest.key&&!S.active.sets.some(s=>s.done))S.active=null;
@@ -99,11 +99,11 @@ function saveScreenshotWorkout(){
   delete S.screenshotDraft;delete S.garminQuest;delete S.drafts['log:image'];screenshotPreview='';
   persist();progressTab='muscles';go('progress');
   toast(quest?'Garmin workout saved. Quest and muscle map updated.':'Garmin workout saved and assigned to muscles.');
- }catch(e){toast(e.message)}
+ }catch(e){if(typeof importProblem==='function')importProblem(e.message);else toast(e.message)}
 }
 // Null load remains unknown in storage and backup validation.
 const screenshotValidate=validateBackup;
-validateBackup=function(x){try{const c=structuredClone(x);for(const l of c.logs||[])for(const s of l.sets||[])if(s.weight===null)s.weight=0;return screenshotValidate(c)}catch{return false}};
+validateBackup=function(x){try{const c=structuredClone(x);for(const l of c.logs||[])for(const s of l.sets||[]){if(s.weight===null)s.weight=0;if(s.reps===null)s.reps=1}for(const s of c.active?.sets||[]){if(s.weight===null)s.weight=0;if(s.rir===null)s.rir=0}return screenshotValidate(c)}catch{return false}};
 const screenshotMuscleDetail=muscleDetail;
 muscleDetail=function(){return screenshotMuscleDetail().replace(/null kg/g,'load unknown')};
 

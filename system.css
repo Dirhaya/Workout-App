@@ -58,3 +58,4 @@ label{font-size:13px;color:#b8b8be}.setgrid{gap:8px;margin-top:10px}.setgrid inp
 @media(max-width:680px){.greeting h1{font-size:34px}.card{padding:18px}.modal{border-radius:24px 24px 0 0}.nav{padding-bottom:max(12px,env(safe-area-inset-bottom))}.setgrid{gap:6px}.quest-line{gap:12px}}
 
 .garmin-steps{padding-left:22px;font-size:14px;line-height:1.6;color:var(--muted)}.garmin-steps li{margin:10px 0}
+.import-group{padding:18px 0;border-top:1px solid var(--line)}.import-group h3{font-size:17px;margin-bottom:7px}.import-set,.import-set-head{display:grid;grid-template-columns:36px 1fr 1fr;align-items:center;gap:10px;margin:10px 0}.import-set-head{font-size:11px;color:var(--muted)}.import-set input{min-width:0}.import-set input[type=checkbox]{min-height:22px}.warn{color:#ffd08a}#import-error,#session-error{margin:16px 0}.import-group select{max-width:100%}
