@@ -1,7 +1,7 @@
 let localAssistant=null,assistantLoaded=false,assistantBusy=false,assistantStatus='Not loaded',assistantTimer=null;
 let assistantMessages=[];
 const APP_HELP=[
-['log import screenshot garmin photo image','To read a screenshot: Log → Read screenshot automatically → Choose screenshot or Paste image. Review the grouped sets, choose kg or lb, verify date, then save. OCR does not infer missing weights, RIR, or total duration.'],
+['log import screenshot garmin photo image','Record strength sets on Garmin and sync. Open a gym quest → Import Garmin workout, or Log → Screenshot. Choose up to 8 set-table screenshots, review the grouped sets and linked quest, choose kg or lb, verify date, then save once. OCR does not infer missing weights, RIR, or total duration.'],
 ['custom create edit workout exercise','To customize a workout: Train → My workouts → Create a workout. Search the catalog, choose movements, or Create any exercise and select its muscles. Existing templates have Edit.'],
 ['muscle map progress colour color strength recovery','The front/back muscle map colours count logged sets this week, including assisting muscles. They do not measure muscle growth, fatigue, readiness or recovery. Tap a muscle to see exercise history. Compare the same variation, load convention and effort.'],
 ['level rank xp hunter awakening quest','Hunter level is a consistency game: up to 100 XP per training day, 30 for recovery-only days. Every 300 XP gains a level. Extra workouts on the same day earn no additional XP. It is not an athletic ranking.'],
@@ -20,7 +20,7 @@ logging=function(){return logTab==='assistant'?heading('Chapter 02 / App assista
 function setAssistantStatus(text){assistantStatus=text;if($('assistant-status'))$('assistant-status').textContent=text}
 function assistantTimeout(){clearTimeout(assistantTimer);assistantTimer=setTimeout(()=>{stopAssistant(false);setAssistantStatus('Stopped after 5 minutes. Download or inference was too slow; try again on Wi-Fi, or use the app guide.')},120000)}
 function startAssistantWorker(){if(localAssistant)return localAssistant;localAssistant=new Worker('./assistant-worker.js',{type:'module'});localAssistant.onmessage=e=>{const m=e.data;if(m.type==='progress'){setAssistantStatus(m.status==='progress'?`Downloading ${m.file||'model'} · ${Math.round(m.progress||0)}%`:'Loading model: '+m.status);assistantTimeout()}if(m.type==='ready'){assistantLoaded=true;if(m.operation==='load'){assistantBusy=false;clearTimeout(assistantTimer)}setAssistantStatus(assistantBusy?'Model ready. Working…':'Model ready on this device.')}if(m.type==='answer'){assistantBusy=false;clearTimeout(assistantTimer);assistantMessages.push({role:'assistant',text:m.text});assistantMessages=assistantMessages.slice(-8);setAssistantStatus('Answer generated locally. Check facts against your records.');if(tab==='log'&&logTab==='assistant')render()}if(m.type==='error'){stopAssistant(false);setAssistantStatus(m.message)}};localAssistant.onerror=()=>{stopAssistant(false);setAssistantStatus('The model worker stopped. This browser may lack memory, or a model download was blocked. The rest of the app still works.')};return localAssistant}
-function loadAssistant(){if(screenshotBusy)return toast('Finish reading the screenshot before loading the model.');if(assistantBusy)return toast('The assistant is already working.');if(assistantLoaded)return toast('The local model is ready.');assistantBusy=true;setAssistantStatus('Downloading and loading the local model…');assistantTimeout();try{startAssistantWorker().postMessage({type:'load'})}catch{stopAssistant(false);setAssistantStatus('Could not start the local model. Instant help still works.')}}
+function loadAssistant(){if(screenshotBusy||screenshotBatchBusy)return toast('Finish reading the screenshot before loading the model.');if(assistantBusy)return toast('The assistant is already working.');if(assistantLoaded)return toast('The local model is ready.');assistantBusy=true;setAssistantStatus('Downloading and loading the local model…');assistantTimeout();try{startAssistantWorker().postMessage({type:'load'})}catch{stopAssistant(false);setAssistantStatus('Could not start the local model. Instant help still works.')}}
 function stopAssistant(show=true){clearTimeout(assistantTimer);localAssistant?.terminate();localAssistant=null;assistantLoaded=false;assistantBusy=false;setAssistantStatus('Model unloaded. Cached downloads may remain.');if(show)toast('Local model stopped and memory released.')}
 function instantAnswer(question){
  const terms=normalizeName(question).split(' ').filter(t=>t.length>2);
@@ -30,7 +30,7 @@ function instantAnswer(question){
  return exercise?exercise.name+' trains '+exercise.muscles+'. '+(exercise.tips?.[0]||'Record a controlled setup.'):'I do not have a reliable answer in the app guide. Check the exercise library, or load the optional local model for a short answer.';
 }
 function askAssistant(){
- if(screenshotBusy)return toast('Finish image recognition first.');
+ if(screenshotBusy||screenshotBatchBusy)return toast('Finish image recognition first.');
  if(assistantBusy)return toast('Wait for the current answer, or press Stop.');
  const field=$('assistant-question'),q=field?.value.trim();
  if(!q)return toast('Enter a question first.');
@@ -52,5 +52,5 @@ function askAssistant(){
  render()
 }
 const previousUpdateSafe=updateSafe;
-updateSafe=function(){return !assistantBusy&&!screenshotBusy&&previousUpdateSafe()};
+updateSafe=function(){return !assistantBusy&&!screenshotBusy&&!screenshotBatchBusy&&previousUpdateSafe()};
 

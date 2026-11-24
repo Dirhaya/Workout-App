@@ -156,3 +156,14 @@ Today now puts the current quest and weekly schedule above an expandable muscle 
 Typing updates the in-memory draft immediately and batches disk persistence after 300 ms. Changes, navigation and page exit flush drafts. Muscle history is indexed once per screen instead of rescanned for each SVG region. Removed two redundant startup renders. These changes reduce storage writes and repeated computation; no measured iPhone speed improvement is claimed.
 
 Regression checks cover incomplete profiles, ordinary gym/run logging, resumed sessions, guided assessment gating, and memory/disk draft behavior. Physical Safari rendering remains unverified; the available Chromium executable could not launch under this environment's socket restrictions.
+
+
+## Version 2.4 — record on Garmin, import into a quest
+
+A strength quest now has **Import Garmin workout**. Record the sets using Strength on the Instinct 2X, save and sync to Garmin Connect, then select the set-table screenshots from that quest. There is no Garmin account connection and the app cannot send a workout to the watch.
+
+Choose up to eight screenshots at once, processed sequentially on the device, or use Add screenshots to append more. The importer groups exercises, retains set values, and saves the reviewed result as one strength session with the selected quest key. Overlapping rows are skipped only when their source set number and recognised values match; conflicting repeated set numbers are excluded pending review. Rows without readable source numbers are kept, so verify overlaps manually. Different detected weight units cannot be combined. Only the latest screenshot preview stays in memory.
+
+Check the workout date, units and visible sets before saving. Total duration, RIR and missing loads are never invented. An activity summary with calories and heart rate has no exercise/rep/load table and cannot be used for muscle attribution. A blank live logger for the same quest is cleared after a successful import; a logger with completed sets must first be finished or discarded. Failed persistence leaves the import draft available.
+
+Test coverage includes screenshot row merging, overlap/conflict handling, mixed-unit protection, quest completion credit, missing effort/duration handling and save failure recovery. Browser OCR accuracy and physical iPhone performance still depend on screenshot layout and device behavior.

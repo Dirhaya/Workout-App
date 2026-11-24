@@ -56,3 +56,5 @@ label{font-size:13px;color:#b8b8be}.setgrid{gap:8px;margin-top:10px}.setgrid inp
 .meter{background:#2c2c2e;height:4px}.meter span{background:#0a84ff}.save-status{color:#8e8e93}.toast{background:#303033;border:0;border-radius:14px}
 .page{animation:none!important}
 @media(max-width:680px){.greeting h1{font-size:34px}.card{padding:18px}.modal{border-radius:24px 24px 0 0}.nav{padding-bottom:max(12px,env(safe-area-inset-bottom))}.setgrid{gap:6px}.quest-line{gap:12px}}
+
+.garmin-steps{padding-left:22px;font-size:14px;line-height:1.6;color:var(--muted)}.garmin-steps li{margin:10px 0}
