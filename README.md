@@ -146,3 +146,13 @@ Calendar export follows the new day order at your saved gym and run reminder tim
 Each gym quest (Tuesday A, Thursday B and Saturday home C) shows a named bodyweight option beside an exercise when one is available, and an **Alternatives** button that opens comparable choices. Some shoulder and pulling machine movements have no equivalent no-equipment replacement; the UI explicitly describes the substitute as a lighter pattern instead of claiming identical strength training. Home-gym Saturday alternatives remain limited to your equipment.
 
 **Start short bodyweight quest** opens five familiar movement patterns with one set each: chair squat, push-up (scale to a wall if needed), prone back raise, glute bridge and a plank. No planned reps are marked complete. Record only actual sets and actual duration; finished short sessions count toward that day's weekly quest and consistency XP under the same daily cap. The full quest and saved exercise swaps stay available.
+
+## Version 2.3.1 — quest logging fix and iPhone simplicity
+
+Regular quest logging no longer redirects to profile setup. Gym quests open their set logger directly; run quests open their run form. Profile remains optional for ordinary logging and is still required for the guided assessments. An existing session with the same quest resumes; another quest cannot replace an unfinished session. Personalization values remain editable in Profile.
+
+Today now puts the current quest and weekly schedule above an expandable muscle map. The interface uses iPhone system typography, grouped dark surfaces, standard blue actions and larger controls. Hunter rank and weekly quests remain.
+
+Typing updates the in-memory draft immediately and batches disk persistence after 300 ms. Changes, navigation and page exit flush drafts. Muscle history is indexed once per screen instead of rescanned for each SVG region. Removed two redundant startup renders. These changes reduce storage writes and repeated computation; no measured iPhone speed improvement is claimed.
+
+Regression checks cover incomplete profiles, ordinary gym/run logging, resumed sessions, guided assessment gating, and memory/disk draft behavior. Physical Safari rendering remains unverified; the available Chromium executable could not launch under this environment's socket restrictions.

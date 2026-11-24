@@ -53,4 +53,4 @@ function askAssistant(){
 }
 const previousUpdateSafe=updateSafe;
 updateSafe=function(){return !assistantBusy&&!screenshotBusy&&previousUpdateSafe()};
-render();
+

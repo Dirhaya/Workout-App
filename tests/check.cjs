@@ -10,6 +10,7 @@ for(const f of ['catalog.js','text-import.js','muscles.js','drafts.js','updates.
 vm.runInContext(fs.readFileSync(__dirname+'/../image-import.js','utf8'),context);
 vm.runInContext(fs.readFileSync(__dirname+'/../assistant.js','utf8'),context);
 const run=s=>vm.runInContext(s,context), set=(id,v)=>node(id).value=String(v);
+run('render()');
 assert(node('app').innerHTML.length>100);
 for(const tab of ['home','train','log','progress']){run(`go('${tab}')`);assert(node('app').innerHTML.length>100)}
 for(const pane of ['suggested','assess','custom'])run(`trainingTab='${pane}';go('train')`);
@@ -112,7 +113,7 @@ assert(run("runBrief(WEEK_PLAN[4],2).startsWith('Intervals')"));
 assert(run("alternatives('barsquat').includes('airsquat')"));
 run("applyAlternative('a',0,'legpress',false)");
 assert.equal(run("programMoves(WEEK_PLAN.find(q=>q.key==='a'))[0]"),'legpress');
-run("startQuest('a')");node('familiar').checked=true;node('safeties').checked=true;node('begin-confirm').onclick();
+run("startQuest('a')");
 assert.equal(run("S.active.sets.length"),18);
 assert.equal(run("S.active.questKey"),'a');
 assert.equal(run("S.active.sets[0].id"),'legpress');
@@ -152,7 +153,7 @@ assert(run("LOW_ENERGY_MOVES.every(id=>E[id]?.equipment==='Bodyweight'||id==='sq
 assert.equal(run("bodyweightOption('latpulldown')"),'proneback');
 assert.equal(run("alternatives('latpulldown')[0]"),'proneback');
 assert.match(run("questOverview('b');document.getElementById('overlay').innerHTML"),/Start short bodyweight quest/);
-run("startQuest('b',true)");node('familiar').checked=true;node('begin-confirm').onclick();
+run("startQuest('b',true)");
 assert.equal(run("S.active.sets.length"),5);
 assert.equal(run("S.active.sets.every(s=>s.weight===0&&!s.done)"),true);
 assert.equal(run("S.active.shortQuest"),true);
@@ -170,3 +171,33 @@ assert.equal(run('S.logs.at(-1).sets.length'),1);
 assert.equal(run('S.logs.at(-1).sets[0].id'),'squat');
 assert(run('validateBackup(S)'));
 console.log('PASS: completed short quest records only the performed set and survives backup validation.');
+
+// Regression: profile personalization must never block ordinary quest logging.
+run("globalThis.previousProfile=structuredClone(S.p);S.p=fresh().p;S.active=null;closeModal();questOverview('a');startQuest('a')");
+assert.equal(run('S.active.questKey'),'a');
+assert.equal(run('tab'),'train');
+assert.equal(run('dialogKey'),'');
+assert.equal(run('S.active.sets.length'),18);
+const resumedId=run('S.active.id');
+run("startQuest('a')");assert.equal(run('S.active.id'),resumedId);
+run("startQuest('b')");assert.equal(run('S.active.id'),resumedId);
+run("S.active=null;startQuest('c',true)");assert.equal(run('S.active.shortQuest'),true);
+run("S.active=null;startQuest('easy')");assert.equal(run('dialogKey'),'Run logger');
+run("closeModal();openRun(true)");assert.equal(run('dialogKey'),'Your player profile');
+run("closeModal();start('upper')");assert.equal(run('dialogKey'),'Your player profile');
+run("closeModal();start('custom',{name:'My session',moves:['pushup']})");assert.equal(run('dialogKey'),'Before you begin');
+run("S.p=previousProfile;closeModal()");
+assert(run('home().indexOf("TODAY’S QUEST")')<run('home().indexOf("Training map & muscle progress")'));
+console.log('PASS: incomplete profiles can start/resume gym and run quests; active sessions are protected; assessments retain profile setup.');
+
+// Typing updates in-memory fields immediately, without a storage write per key.
+run("S.active=null;startQuest('a');document.querySelectorAll=()=>[{id:'reps-0',value:'7',type:'number',readOnly:false}]");
+const typedBefore=local.get('arise-v1');
+run('scheduleDraftSave()');
+assert.equal(run('S.active.sets[0].reps'),'7');
+assert.equal(local.get('arise-v1'),typedBefore);
+run('flushDraftSave()');
+assert.equal(JSON.parse(local.get('arise-v1')).active.sets[0].reps,'7');
+run("document.querySelectorAll=()=>[]");
+assert(run('validateBackup(S)'));
+console.log('PASS: typing updates memory before batched disk writes, leaving the page flushes the draft.');

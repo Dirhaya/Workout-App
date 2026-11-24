@@ -29,4 +29,4 @@ const screenshotValidate=validateBackup;
 validateBackup=function(x){try{const c=structuredClone(x);for(const l of c.logs||[])for(const s of l.sets||[])if(s.weight===null)s.weight=0;return screenshotValidate(c)}catch{return false}};
 const screenshotMuscleDetail=muscleDetail;
 muscleDetail=function(){return screenshotMuscleDetail().replace(/null kg/g,'load unknown')};
-render();
+

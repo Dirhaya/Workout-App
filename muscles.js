@@ -1,6 +1,25 @@
 // Front/back schematic: colored regions show recorded training exposure, not measured muscle size.
 let selectedMuscle='chest';
-function muscleData(group){const rows=S.logs.flatMap(l=>(l.sets||[]).filter(s=>s.done&&E[s.id]?.groups?.includes(group)).map(s=>({...s,date:l.date,title:l.title})));return {all:rows,week:rows.filter(r=>weekDays().includes(r.date))}}
+// Build the index once per rendered screen, rather than re-scanning history per SVG path.
+let muscleIndex=null,muscleIndexLogs=null,muscleIndexLength=-1;
+function invalidateMuscleData(){muscleIndex=null}
+function muscleData(group){
+ if(!muscleIndex||muscleIndexLogs!==S.logs||muscleIndexLength!==S.logs.length){
+  const week=new Set(weekDays());
+  muscleIndex=Object.fromEntries(Object.keys(MUSCLES).map(g=>[g,{all:[],week:[]}]));
+  for(const log of S.logs)for(const set of log.sets||[]){
+   if(!set.done)continue;
+   for(const g of E[set.id]?.groups||[]){
+    if(!muscleIndex[g])continue;
+    const row={...set,date:log.date,title:log.title};
+    muscleIndex[g].all.push(row);
+    if(week.has(log.date))muscleIndex[g].week.push(row);
+   }
+  }
+  muscleIndexLogs=S.logs;muscleIndexLength=S.logs.length;
+ }
+ return muscleIndex[group]||{all:[],week:[]}
+}
 function muscleFill(g){const n=muscleData(g).week.length;return n===0?'#252936':n<=3?'#605482':n<=7?'#9777d5':'#c4a5ff'}
 function muscleShape(g,d){return `<path d="${d}" fill="${muscleFill(g)}" stroke="#14141f" stroke-width="1.4" tabindex="0" role="button" aria-label="${MUSCLES[g]}: ${muscleData(g).week.length} logged sets this week" onclick="selectMuscle('${g}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectMuscle('${g}')}"/>`}
 function anatomy(back=false){return `<svg viewBox="0 0 180 350" class="anatomy" aria-label="${back?'Back':'Front'} muscle diagram"><g fill="#171c28" stroke="#657085" stroke-width="1.3"><ellipse cx="90" cy="26" rx="17" ry="22"/><path d="M80 47 L78 57 Q51 59 40 77 L27 124 17 176 22 194 31 179 42 140 53 103 58 145 55 174 61 224 66 279 68 321 61 337 82 338 85 286 90 234 95 286 98 338 119 337 112 321 114 279 119 224 125 174 122 145 127 103 138 140 149 179 158 194 163 176 153 124 140 77 Q129 59 102 57 L100 47Z"/></g>${back?

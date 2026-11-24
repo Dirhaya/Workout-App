@@ -45,17 +45,29 @@ function questOverview(key){
  const exercises=q.moves?programMoves(q).map((id,i)=>'<div class="routine-row"><div><b>'+esc(E[id].name)+'</b><small>'+prescription(q,q.moves[i])+(bodyweightOption(id)?' · bodyweight: '+esc(E[bodyweightOption(id)].name):'')+'</small></div><button class="swap-button" aria-label="Alternatives for '+esc(E[id].name)+'" onclick="chooseAlternative(\''+q.key+'\','+i+',\''+id+'\')">Alternatives ⇄</button></div>').join(''):'<p class="run-brief">'+(q.kind==='run'?runBrief(q):q.focus)+'</p>';
  modal(q.name,'<span class="eyebrow">WEEKLY QUEST · '+['MON','TUE','WED','THU','FRI','SAT','SUN'][q.day]+'</span><p class="tagline">'+q.focus+'</p>'+exercises+(q.home?'<p class="note">Saturday uses your home equipment and bodyweight; no machines or dumbbells needed.</p>':'')+(q.moves?'<div class="note"><b>Low-energy option · 10–20 min</b><p class="small">Chair squats, floor or wall push-ups, prone back raises, glute bridges, and a plank. One controlled set each. This is lighter training; the back movement is not a replacement for loaded rows or pull-ups.</p></div>':'')+'<p class="tagline">Save only sets you actually complete. Skip or rest if you feel unwell or cannot use controlled form.</p>',q.moves?'<button class="btn full" onclick="startQuest(\''+q.key+'\')">Start full quest</button><button class="btn secondary full" onclick="startQuest(\''+q.key+'\',true)">Start short bodyweight quest</button>':'<button class="btn full" onclick="startQuest(\''+q.key+'\')">'+(q.kind==='recovery'?'Log recovery':'Start quest')+'</button>');
 }
+// Opening a quest is a logging action. Profile setup belongs to personalization.
 function startQuest(key,short=false){
- const q=WEEK_PLAN.find(x=>x.key===key);if(!q)return;
- if(S.active)return toast('Finish or discard your current session first.');
+ const q=WEEK_PLAN.find(x=>x.key===key);
+ if(!q)return;
+ if(S.active){
+  if(S.active.questKey===key){closeModal();go('train');return}
+  toast('You have an unfinished session. Resume it, or discard it from Train.');return
+ }
  closeModal();
  if(q.kind==='recovery'){restCheck();return}
- if(q.kind==='run'){openRun(false);S.pendingQuest=key;persist();return}
+ if(q.kind==='run'){S.pendingQuest=key;persist();openRun(false);return}
  const moves=short?LOW_ENERGY_MOVES:programMoves(q);
- start('custom',{name:q.name+(short?' · short bodyweight':''),moves});
- const b=$('begin-confirm');if(!b)return;
- const begin=b.onclick;
- b.onclick=()=>{begin();if(S.active){S.active.questKey=key;S.active.shortQuest=short;S.active.sets=moves.flatMap((id,i)=>Array.from({length:short?1:3},()=>({id,variation:E[id].variation,weight:short?0:E[id].bar?20:0,reps:'',rir:'',done:false,target:short?(id==='core'?'1 × 10–30 sec':'1 controlled set · leave 2–3 reps'):prescription(q,q.moves[i])})));persist();render()}}
+ S.active={
+  id:crypto.randomUUID(),type:'custom',questKey:key,shortQuest:short,
+  title:q.name+(short?' · short bodyweight':''),start:Date.now(),date:day(),
+  assessment:false,notes:'',
+  sets:moves.flatMap((id,i)=>Array.from({length:short?1:3},()=>({
+   id,variation:E[id].variation,weight:short?0:E[id].bar?20:0,
+   reps:'',rir:'',done:false,
+   target:short?(id==='core'?'1 × 10–30 sec':'1 controlled set · leave 2–3 reps'):prescription(q,q.moves[i])
+  })))
+ };
+ persist();go('train');
 }
 function questBoard(){const w=programWeek(),count=WEEK_PLAN.filter(q=>q.kind!=='recovery'&&questComplete(q)).length;return '<section class="card quest-board"><div class="row between"><div><span class="eyebrow">WEEKLY QUESTS</span><h2>'+count+' / 5 complete</h2></div><button class="link" onclick="questSettings()">Schedule</button></div><p class="small muted">'+(w<1?'Starts '+dateLabel(programSettings().start):w>8?'Eight-week cycle finished. Review and choose a new start.':'Week '+w+' of 8 · 3 gym + 2 runs')+'</p>'+WEEK_PLAN.map(q=>'<button class="quest-line '+(questDate(q)===day()?'today-quest':'')+'" onclick="questOverview(\''+q.key+'\')"><span class="quest-day">'+['MON','TUE','WED','THU','FRI','SAT','SUN'][q.day]+'</span><span><b>'+q.name+'</b><small>'+q.focus+' · '+questTime(q)+'</small></span><span class="quest-check">'+(questComplete(q)?'✓':'›')+'</span></button>').join('')+'</section>'}
 function questSettings(){const p=programSettings();modal('Quest schedule','<p class="small">Monday easy run, Tuesday gym A, Wednesday recovery, Thursday gym B, Friday quality run, Saturday home gym C, Sunday rest. Start date must be a Monday. Calendar alerts work outside the app once imported into your calendar.</p><label>Start Monday</label><input id="program-start" type="date" value="'+esc(p.start)+'"><label>Gym reminder · Dubai</label><input id="program-gym-time" type="time" value="'+esc(p.gymTime||p.time||'18:00')+'"><label>Run reminder · Dubai (before the heat)</label><input id="program-run-time" type="time" value="'+esc(p.runTime||'06:00')+'"><label class="check"><input id="program-notices" type="checkbox" '+(p.notices?'checked':'')+'>Show quest notice when I open the app</label><p class="tagline">Calendar export contains 56 events over eight weeks with a 15-minute alert. Your calendar controls notification permissions. Export once to avoid duplicates. Changes here do not update previously imported events.</p>','<button class="btn" onclick="saveQuestSettings()">Save</button><button class="btn secondary" onclick="exportQuestCalendar()">Export reminders</button>')}
@@ -63,8 +75,19 @@ function saveQuestSettings(){const d=$('program-start').value,gymTime=$('program
 function calendarEscape(s){return s.replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;')}
 function questCalendar(){const p=programSettings(),lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Workout Log//Quests//EN','CALSCALE:GREGORIAN'];for(let w=0;w<8;w++)for(const q of WEEK_PLAN){const d=new Date(p.start+'T'+questTime(q)+':00+04:00');d.setUTCDate(d.getUTCDate()+w*7+q.day);const stamp=x=>x.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');const desc=q.moves?programMoves(q).map((id,i)=>E[id].name+' '+prescription(q,q.moves[i])).join('\n'):q.kind==='run'?runBrief(q,w+1):q.focus;lines.push('BEGIN:VEVENT','UID:quest-'+p.start+'-'+w+'-'+q.key+'@workout-log','DTSTAMP:'+stamp(new Date()),'DTSTART:'+stamp(d),'DTEND:'+stamp(new Date(+d+3600000)),'SUMMARY:SYSTEM QUEST - '+q.name,'DESCRIPTION:'+calendarEscape('Week '+(w+1)+'\n'+desc+'\nhttps://dirhaya.github.io/Workout-App/'),'BEGIN:VALARM','TRIGGER:-PT15M','ACTION:DISPLAY','DESCRIPTION:Your weekly quest is ready','END:VALARM','END:VEVENT')}return lines.concat('END:VCALENDAR').join('\r\n')}
 function exportQuestCalendar(){if(!saveQuestSettings())return;const blob=new Blob([questCalendar()],{type:'text/calendar;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='workout-quests.ics';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);toast('Open workout-quests.ics in your calendar to add alerts.')}
-function questNotice(){const p=programSettings(),q=WEEK_PLAN.find(q=>questDate(q)===day());if(!p.notices||programWeek()<1||programWeek()>8||p.seen===day()||!q||questComplete(q)||S.active)return;p.seen=day();persist();modal('SYSTEM · Quest available','<div class="system-notice"><span class="eyebrow">WEEK '+programWeek()+' / 8</span><h2>'+q.name+'</h2><p>'+q.focus+'</p><p class="small">A repeatable week matters more than a perfect day.</p></div>','<button class="btn full" onclick="closeModal();questOverview(\''+q.key+'\')">View quest</button>')}
-home=function(){return heading('SYSTEM / AWAKENING','Today','Your training. One week at a time.')+(S.active?'<button class="btn full" onclick="go(\'train\')">Resume '+esc(S.active.title)+'</button>':'')+musclePanel()+'<div class="row between xp-summary"><span>Hunter level '+level()+' · Rank '+rank()+'</span><span>'+xp()%300+' / 300 XP</span></div><div class="meter"><span style="width:'+xp()%300/3+'%"></span></div><div class="spacer"></div>'+questBoard()+ '<button class="link" onclick="research()">Training tips & evidence</button>'};
+function questNotice(){const p=programSettings(),q=WEEK_PLAN.find(q=>questDate(q)===day());if(!p.notices||programWeek()<1||programWeek()>8||p.seen===day()||!q||questComplete(q)||S.active||dialogKey||tab!=='home')return;p.seen=day();persist();modal('SYSTEM · Quest available','<div class="system-notice"><span class="eyebrow">WEEK '+programWeek()+' / 8</span><h2>'+q.name+'</h2><p>'+q.focus+'</p><p class="small">A repeatable week matters more than a perfect day.</p></div>','<button class="btn full" onclick="closeModal();questOverview(\''+q.key+'\')">View quest</button>')}
+function todayQuestCard(){
+ const q=WEEK_PLAN.find(q=>questDate(q)===day());
+ if(!q)return '';
+ return '<section class="card today-card"><div class="row between"><span class="eyebrow">TODAY’S QUEST</span><span class="badge">'+(questComplete(q)?'Logged':questTime(q))+'</span></div><h2>'+esc(q.name)+'</h2><p class="small">'+esc(q.focus)+'</p><button class="btn full" onclick="'+(S.active?'go(\'train\')':'questOverview(\''+q.key+'\')')+'">'+(S.active?'Resume workout':'View workout')+'</button></section>';
+}
+home=function(){
+ return heading('SYSTEM / DAILY QUESTS','Today','A little progress, recorded.')+
+ todayQuestCard()+'<div class="spacer"></div>'+questBoard()+
+ '<div class="row between xp-summary"><span>Hunter level '+level()+' · Rank '+rank()+'</span><span>'+xp()%300+' / 300 XP</span></div><div class="meter"><span style="width:'+xp()%300/3+'%"></span></div>'+
+ '<div class="spacer"></div><details class="training-map"><summary>Training map & muscle progress</summary>'+musclePanel()+'</details>'+
+ '<button class="link" onclick="research()">Training tips</button>';
+};
 const programTrain=train;
 train=function(){if(S.active)return programTrain();return '<div class="tabs"><button onclick="trainingTab=\'quests\';render()" class="'+(trainingTab==='quests'?'on':'')+'">Weekly quests</button><button onclick="trainingTab=\'custom\';render()">My routines</button><button onclick="trainingTab=\'suggested\';render()">Other workouts</button></div>'+(trainingTab==='quests'?questBoard():programTrain())};
 const programSession=session;
